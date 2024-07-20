@@ -6,7 +6,7 @@ import streamlit as st
 import cv2
 from PIL import Image
 import numpy as np
-from scipy.signal import argrelextrema
+
 
 st.write("# Beam-profiler from picture")
 
@@ -24,23 +24,23 @@ if uploaded_files:
     img = np.array(Image.open(uploaded_files[0]))
     img = cv2.medianBlur(img,3)
 
-    option = st.selectbox(
-    "How would you like to remove background?",
-    ("None", "Corner", "Histogram"))
+    option = st.selectbox("How would you like to remove background?",
+                          ("None", "Corner", "Histogram"), index=2)
 
     match option:
         case "None":
             pass
         case "Corner":
+            # Mean in corner
             background = (img[:10,:10].mean(dtype = "uint64")  + 1).astype("uint8")
-            img[img<background] = 0
+            img[img<background] = background
         case "Histogram":
+            # First local minimum
             hist = cv2.calcHist([img],[0],None,[256],[0,256])
-            index_min, _ = argrelextrema(hist,np.less)
-            if any(index_min):
-                background = [index_min[0]]
-                img[img<background] = 0    
-
+            minima = np.where((hist[1:-1] < hist[0:-2]) * (hist[1:-1] < hist[2:]))[0] + 1
+            if any(minima):
+                background = [minima[0]]
+                img[img<background] = background    
 
 
     img = cv2.normalize(img, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
@@ -82,4 +82,3 @@ if uploaded_files:
 
     st.line_chart(profile_x)
     st.line_chart(profile_y)
-
