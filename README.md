@@ -1,2 +1,2 @@
 # Beam-profiler
-Online beam profile calculation from the picture
+Online beam profile calculation from the picture gray picture
