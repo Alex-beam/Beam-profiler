@@ -144,17 +144,17 @@ with tempfile.TemporaryDirectory() as temp_dir_name:
         cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".jpg", img_g)
         df.to_csv(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".csv", encoding='utf-8')
 
-    dir = os.getcwd()
+    # dir = os.getcwd()
     
-    os.chdir(temp_dir_name)
+    # os.chdir(temp_dir_name)
 
     # file_paths = get_all_file_paths(os.getcwd())     
     # print(file_paths)
     file_paths = []
-    for f in os.scandir():
+    for f in os.scandir(temp_dir_name):
         if f.is_file():
             file_paths.append(f.path)
-    # print(file_paths2)
+    st.write(file_paths)
 
     # writing files to a zipfile 
     with ZipFile(temp_dir_name + "\\profiles.zip", "w") as zip: 
@@ -170,4 +170,4 @@ with tempfile.TemporaryDirectory() as temp_dir_name:
                 file_name="profiles.zip",
                 )
         
-    os.chdir(dir)         
+    # os.chdir(dir)         
