@@ -7,6 +7,7 @@ import cv2
 from PIL import Image
 import numpy as np
 import pandas as pd
+from zipfile import ZipFile
 
 
 def convert_df(df):
@@ -104,3 +105,30 @@ if uploaded_files:
                 file_name="Beam_profile.png",
                 mime="image/png"
             )
+        
+    # path to folder which needs to be zipped 
+    # directory = './image'
+  
+    # calling function to get all file paths in the directory 
+    file_paths = ["image\\Beam_profile.png"]
+  
+    # printing the list of all files to be zipped 
+    # print('Following files will be zipped:') 
+    # for file_name in file_paths: 
+    #     print(file_name) 
+  
+    # writing files to a zipfile 
+    with ZipFile("temp\\my_python_files.zip","w") as zip: 
+        # writing each file one by one 
+        for file in file_paths: 
+            zip.write(file) 
+  
+    print('All files zipped successfully!')
+
+    
+    with open("temp\\my_python_files.zip", "rb") as file:
+        btn = st.download_button(
+                label="Download zip",
+                data=file,
+                file_name="my_python_files.zip",
+                )         
