@@ -143,11 +143,12 @@ with tempfile.TemporaryDirectory() as temp_dir_name:
     for uploaded_file, img_g, img_cmap, df in zip(uploaded_files, imgs_g, imgs_cmap, imgs_df):  
           
         cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + "." + extension, img_g)
-        cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + "col" + "." + extension, img_cmap[:,:,::-1])
+        cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + "col" + "." + extension, img_cmap[::,::-1])
         df.to_csv(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".csv", encoding='utf-8')
 
 
     file_paths = get_all_file_paths(temp_dir_name)
+    st.write(file_paths)
 
     # writing files to a zipfile 
     with ZipFile(temp_dir_name + "\\profiles.zip", "w") as zip: 
