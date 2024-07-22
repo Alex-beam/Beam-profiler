@@ -141,7 +141,7 @@ extension = st.selectbox("Choose the extension of new image files", ['png', 'jpg
 
 with tempfile.TemporaryDirectory() as temp_dir_name:
     for uploaded_file, img_g, img_cmap, df in zip(uploaded_files, imgs_g, imgs_cmap, imgs_df):  
-          
+        st.write(temp_dir_name)
         cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + "." + extension, img_g)
         cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + "col" + "." + extension, img_cmap[::,::-1])
         df.to_csv(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".csv", encoding='utf-8')
