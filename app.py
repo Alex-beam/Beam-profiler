@@ -7,14 +7,27 @@ import cv2
 from PIL import Image
 import numpy as np
 import pandas as pd
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_LZMA, ZIP_BZIP2, ZIP_DEFLATED
 import tempfile
+import os
 
-@st.cache_data
-def convert_df(df):
-    # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return df.to_csv().encode("utf-8")
+# def get_all_file_paths(directory): 
+  
+#     # initializing empty file paths list 
+#     file_paths = [] 
+  
+#     # crawling through directory and subdirectories 
+#     for root, directories, files in os.walk(directory): 
+#         for filename in files: 
+#             # join the two strings in order to form the full filepath. 
+#             filepath = os.path.join(root, filename) 
+#             file_paths.append(filepath) 
+  
+#     # returning all file paths 
+#     return file_paths         
 
+
+width = 100
 
 print('Go!')
 st.write("# Beam-profiler from picture")
@@ -25,16 +38,25 @@ uploaded_files = st.sidebar.file_uploader("Choose files (png, jpg, tiff)",
 for uploaded_file in uploaded_files:
     bytes_data = uploaded_file.read()
     # st.write("filename:", uploaded_file.name)
-    st.image(uploaded_file, width= 100)
+    # st.image(uploaded_file, width= 100)
 
-width = 300
-if uploaded_files:
-    st.image(uploaded_files, width=width)
-    img = np.array(Image.open(uploaded_files[0]))
+st.image(uploaded_files, width=width)
+
+option = st.selectbox("How would you like to remove background?",
+                        ("None", "Corner", "Histogram"), index=2)
+
+
+st.write("Processed images:")
+
+
+imgs = []
+imgs_g = []
+imgs_df = []
+
+for uploaded_file in uploaded_files:   
+    
+    img = np.array(Image.open(uploaded_file))
     img = cv2.medianBlur(img,3)
-
-    option = st.selectbox("How would you like to remove background?",
-                          ("None", "Corner", "Histogram"), index=2)
 
     match option:
         case "None":
@@ -53,13 +75,19 @@ if uploaded_files:
 
 
     img = cv2.normalize(img, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    st.image(img, width=width)
+    imgs.append(img)
 
-    delta = st.number_input(label = "Select size of final picture in pxl", 
-                    min_value=10,
-                    max_value=2000,
-                    value=400) // 2
+st.image(imgs, width=width)
 
+delta = st.number_input(label = "Select size of final picture in pxl", 
+                min_value=10,
+                max_value=2000,
+                value=400) // 2
+
+st.write("Cropped images:")
+
+for uploaded_file, img in zip(uploaded_files, imgs):   
+    # st.image(img, width=width)
 
     img_g, *_ = cv2.split(img)
     ret, thresh = cv2.threshold(img_g,200,255,cv2.THRESH_BINARY)
@@ -79,57 +107,67 @@ if uploaded_files:
     y2 = int(center_y + delta)
 
     if x1 > 0 and x2 < img_g.shape[1] and y1 > 0 and y2 < img_g.shape[0]:
-        img = img[y1:y2,x1:x2]
-        st.image(img, width=width)
+        img_g = img_g[y1:y2,x1:x2]
+        # st.image(img, width=width)
+        profile_y = img_g[:, delta]
+        profile_x = img_g[delta, :]
     else:
-        st.write('Image is too small')
+        st.write('Unsuccessful cropping! Image is too small')
+        profile_y = img_g[:, center_y]
+        profile_x = img_g[center_x, :]
     
-    # Display profile
-    profile_y = img[:, delta, 1]
-    profile_x = img[delta, :, 1]
-    profile_y = profile_y[..., None]
-    profile_x = profile_x[..., None]
-    data = np.hstack((profile_x, profile_y))
+    df = pd.DataFrame(columns=['x','y'])
+    df.assign(y = profile_y)
+    df.assign(x = profile_x)
+    imgs_g.append(img_g)
+    imgs_df.append(df)
 
-    df = pd.DataFrame(data, columns=['x','y'])
-    st.line_chart(df)
+st.image(imgs_g, width=width)
 
-    with tempfile.TemporaryDirectory() as temp_dir_name:
-        cv2.imwrite(temp_dir_name + "\\Beam_profile.png", img)
 
-        st.download_button(label='Download data frame', data=convert_df(df), file_name='df.csv',  mime='text/csv')
+st.write("Colorized images:")
+imgs_cmap = []
+
+for img_g in imgs_g:
+    
+    img_cmap = cv2.cvtColor(cv2.applyColorMap(img_g, 2), cv2.COLOR_BGR2RGB)
+    imgs_cmap.append(img_cmap)
+
+st.image(imgs_cmap, width=width)
+
+# Creating new images and profiles and and to zip file 
+
+with tempfile.TemporaryDirectory() as temp_dir_name:
+    for uploaded_file, img_g, img_cmap, df in zip(uploaded_files, imgs_g, imgs_cmap, imgs_df):  
+          
+        cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".png", img_g)
+        cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".jpg", img_g)
+        df.to_csv(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".csv", encoding='utf-8')
+
+    dir = os.getcwd()
+    
+    os.chdir(temp_dir_name)
+
+    # file_paths = get_all_file_paths(os.getcwd())     
+    # print(file_paths)
+    file_paths = []
+    for f in os.scandir():
+        if f.is_file():
+            file_paths.append(f.path)
+    # print(file_paths2)
+
+    # writing files to a zipfile 
+    with ZipFile(temp_dir_name + "\\profiles.zip", "w") as zip: 
+        # writing each file one by one 
+        for file in file_paths: 
+            zip.write(file) 
         
-        with open(temp_dir_name + "\\Beam_profile.png", "rb") as file:
-            btn = st.download_button(
-                    label="Download image",
-                    data=file,
-                    file_name="Beam_profile.png",
-                    mime="image/png"
+
+    with open(temp_dir_name + "\\profiles.zip", "rb") as file:
+        btn = st.download_button(
+                label="Download new pictures and profiles in zip",
+                data=file,
+                file_name="profiles.zip",
                 )
-            
-        # path to folder which needs to be zipped 
-        # directory = './image'
-    
-        # calling function to get all file paths in the directory 
-        file_paths = [temp_dir_name + "\\Beam_profile.png"]
-    
-        # printing the list of all files to be zipped 
-        # print('Following files will be zipped:') 
-        # for file_name in file_paths: 
-        #     print(file_name) 
-    
-        # writing files to a zipfile 
-        with ZipFile(temp_dir_name + "\\my_python_files.zip", "w") as zip: 
-            # writing each file one by one 
-            for file in file_paths: 
-                zip.write(file) 
-    
-        print('All files zipped successfully!')
-
         
-        with open(temp_dir_name + "\\my_python_files.zip", "rb") as file:
-            btn = st.download_button(
-                    label="Download All data in zip",
-                    data=file,
-                    file_name="my_python_files.zip",
-                    )         
+    os.chdir(dir)         
