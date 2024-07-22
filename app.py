@@ -8,8 +8,9 @@ from PIL import Image
 import numpy as np
 import pandas as pd
 from zipfile import ZipFile
+import tempfile
 
-
+@st.cache_data
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv().encode("utf-8")
@@ -93,42 +94,42 @@ if uploaded_files:
     df = pd.DataFrame(data, columns=['x','y'])
     st.line_chart(df)
 
-    cv2.imwrite("image\\Beam_profile.png", img)
+    with tempfile.TemporaryDirectory() as temp_dir_name:
+        cv2.imwrite(temp_dir_name + "\\Beam_profile.png", img)
 
-
-    st.download_button(label='Download data frame', data=convert_df(df), file_name='df.csv',  mime='text/csv')
-    
-    with open("image\\Beam_profile.png", "rb") as file:
-        btn = st.download_button(
-                label="Download image",
-                data=file,
-                file_name="Beam_profile.png",
-                mime="image/png"
-            )
+        st.download_button(label='Download data frame', data=convert_df(df), file_name='df.csv',  mime='text/csv')
         
-    # path to folder which needs to be zipped 
-    # directory = './image'
-  
-    # calling function to get all file paths in the directory 
-    file_paths = ["image\\Beam_profile.png"]
-  
-    # printing the list of all files to be zipped 
-    # print('Following files will be zipped:') 
-    # for file_name in file_paths: 
-    #     print(file_name) 
-  
-    # writing files to a zipfile 
-    with ZipFile("temp\\my_python_files.zip","w") as zip: 
-        # writing each file one by one 
-        for file in file_paths: 
-            zip.write(file) 
-  
-    print('All files zipped successfully!')
-
+        with open(temp_dir_name + "\\Beam_profile.png", "rb") as file:
+            btn = st.download_button(
+                    label="Download image",
+                    data=file,
+                    file_name="Beam_profile.png",
+                    mime="image/png"
+                )
+            
+        # path to folder which needs to be zipped 
+        # directory = './image'
     
-    with open("temp\\my_python_files.zip", "rb") as file:
-        btn = st.download_button(
-                label="Download zip",
-                data=file,
-                file_name="my_python_files.zip",
-                )         
+        # calling function to get all file paths in the directory 
+        file_paths = [temp_dir_name + "\\Beam_profile.png"]
+    
+        # printing the list of all files to be zipped 
+        # print('Following files will be zipped:') 
+        # for file_name in file_paths: 
+        #     print(file_name) 
+    
+        # writing files to a zipfile 
+        with ZipFile(temp_dir_name + "\\my_python_files.zip", "w") as zip: 
+            # writing each file one by one 
+            for file in file_paths: 
+                zip.write(file) 
+    
+        print('All files zipped successfully!')
+
+        
+        with open(temp_dir_name + "\\my_python_files.zip", "rb") as file:
+            btn = st.download_button(
+                    label="Download All data in zip",
+                    data=file,
+                    file_name="my_python_files.zip",
+                    )         
