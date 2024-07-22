@@ -21,7 +21,8 @@ def get_all_file_paths(directory):
     for root, directories, files in os.walk(directory): 
         for filename in files: 
             # join the two strings in order to form the full filepath. 
-            filepath = os.path.join(root, filename) 
+            filepath = os.path.join(root, filename)
+            st.write(root, filename) 
             file_paths.append(filepath) 
   
     # returning all file paths 
@@ -142,22 +143,22 @@ extension = st.selectbox("Choose the extension of new image files", ['png', 'jpg
 with tempfile.TemporaryDirectory() as temp_dir_name:
     for uploaded_file, img_g, img_cmap, df in zip(uploaded_files, imgs_g, imgs_cmap, imgs_df):  
         st.write(temp_dir_name)
-        cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + "." + extension, img_g)
-        cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + "col" + "." + extension, img_cmap[::,::-1])
-        df.to_csv(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".csv", encoding='utf-8')
+        cv2.imwrite(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + "." + extension, img_g)
+        cv2.imwrite(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + "col" + "." + extension, img_cmap[::,::-1])
+        df.to_csv(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".csv", encoding='utf-8')
 
 
     file_paths = get_all_file_paths(temp_dir_name)
     st.write(file_paths)
 
     # writing files to a zipfile 
-    with ZipFile(temp_dir_name + "\\profiles.zip", "w") as zip: 
+    with ZipFile(temp_dir_name + r"/profiles.zip", "w") as zip: 
         # writing each file one by one 
         for file in file_paths: 
             zip.write(file) 
         
 
-    with open(temp_dir_name + "\\profiles.zip", "rb") as file:
+    with open(temp_dir_name + r"/profiles.zip", "rb") as file:
         btn = st.download_button(
                 label="Download new pictures and profiles in zip",
                 data=file,
