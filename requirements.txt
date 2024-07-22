@@ -1,6 +1,6 @@
-numpy==2.0.0
-streamlit==1.36.0
-opencv-python==4.10.0.84
+numpy
+streamlit
+opencv-python
 PIL
 scipy
 pandas
