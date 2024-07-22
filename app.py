@@ -22,7 +22,6 @@ def get_all_file_paths(directory):
         for filename in files: 
             # join the two strings in order to form the full filepath. 
             filepath = os.path.join(root, filename)
-            st.write(root, filename) 
             file_paths.append(filepath) 
   
     # returning all file paths 
@@ -34,7 +33,7 @@ width = 100
 print('Go!')
 st.write("# Beam-profiler from picture")
 
-uploaded_files = st.sidebar.file_uploader("Choose files (png, jpg, tiff)", 
+uploaded_files = st.sidebar.file_uploader("Choose grey files with laser beam spot", 
                                           type = ['png', 'jpg', 'bmp', 'tif'], 
                                           accept_multiple_files=True)
 for uploaded_file in uploaded_files:
@@ -86,7 +85,7 @@ delta = st.number_input(label = "Select size of final picture in pxl",
                 max_value=2000,
                 value=400) // 2
 
-st.write("Cropped images:")
+st.write("Cropped images with spot in middle:")
 
 for uploaded_file, img in zip(uploaded_files, imgs):   
     # st.image(img, width=width)
@@ -137,19 +136,26 @@ for img_g in imgs_g:
 
 st.image(imgs_cmap, width=width)
 
+imgs_cmap = []
+
+for img_g in imgs_g:
+    
+    img_cmap = cv2.applyColorMap(img_g, 2)
+    imgs_cmap.append(img_cmap)
+
+
 # Creating new images and profiles and and to zip file 
 extension = st.selectbox("Choose the extension of new image files", ['png', 'jpg', 'tif'])
 
 with tempfile.TemporaryDirectory() as temp_dir_name:
     for uploaded_file, img_g, img_cmap, df in zip(uploaded_files, imgs_g, imgs_cmap, imgs_df):  
-        st.write(temp_dir_name)
+
         cv2.imwrite(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + "." + extension, img_g)
-        cv2.imwrite(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + "col" + "." + extension, img_cmap[::,::-1])
+        cv2.imwrite(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + "col" + "." + extension, img_cmap)
         df.to_csv(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".csv", encoding='utf-8')
 
 
     file_paths = get_all_file_paths(temp_dir_name)
-    st.write(file_paths)
 
     # writing files to a zipfile 
     with ZipFile(temp_dir_name + r"/profiles.zip", "w") as zip: 
