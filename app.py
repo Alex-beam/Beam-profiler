@@ -1,5 +1,5 @@
 """
-Interactive program for online calculation of the beam profile from picture.
+Interactive program for online calculation of the laser beam profile from picture.
 """
 
 import streamlit as st
@@ -11,20 +11,21 @@ from zipfile import ZipFile, ZIP_LZMA, ZIP_BZIP2, ZIP_DEFLATED
 import tempfile
 import os
 
-# def get_all_file_paths(directory): 
+
+def get_all_file_paths(directory): 
   
-#     # initializing empty file paths list 
-#     file_paths = [] 
+    # initializing empty file paths list 
+    file_paths = [] 
   
-#     # crawling through directory and subdirectories 
-#     for root, directories, files in os.walk(directory): 
-#         for filename in files: 
-#             # join the two strings in order to form the full filepath. 
-#             filepath = os.path.join(root, filename) 
-#             file_paths.append(filepath) 
+    # crawling through directory and subdirectories 
+    for root, directories, files in os.walk(directory): 
+        for filename in files: 
+            # join the two strings in order to form the full filepath. 
+            filepath = os.path.join(root, filename) 
+            file_paths.append(filepath) 
   
-#     # returning all file paths 
-#     return file_paths         
+    # returning all file paths 
+    return file_paths         
 
 
 width = 100
@@ -136,25 +137,17 @@ for img_g in imgs_g:
 st.image(imgs_cmap, width=width)
 
 # Creating new images and profiles and and to zip file 
+extension = st.selectbox("Choose the extension of new image files", ['png', 'jpg', 'tif'])
 
 with tempfile.TemporaryDirectory() as temp_dir_name:
     for uploaded_file, img_g, img_cmap, df in zip(uploaded_files, imgs_g, imgs_cmap, imgs_df):  
           
-        cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".png", img_g)
-        cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".jpg", img_g)
+        cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + "." + extension, img_g)
+        cv2.imwrite(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + "col" + "." + extension, img_cmap[:,:,::-1])
         df.to_csv(temp_dir_name + "\\" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".csv", encoding='utf-8')
 
-    # dir = os.getcwd()
-    
-    # os.chdir(temp_dir_name)
 
-    # file_paths = get_all_file_paths(os.getcwd())     
-    # print(file_paths)
-    file_paths = []
-    for f in os.scandir(temp_dir_name):
-        if f.is_file():
-            file_paths.append(f.path)
-    st.write(file_paths)
+    file_paths = get_all_file_paths(temp_dir_name)
 
     # writing files to a zipfile 
     with ZipFile(temp_dir_name + "\\profiles.zip", "w") as zip: 
@@ -170,4 +163,4 @@ with tempfile.TemporaryDirectory() as temp_dir_name:
                 file_name="profiles.zip",
                 )
         
-    # os.chdir(dir)         
+     

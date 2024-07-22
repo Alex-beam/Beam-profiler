@@ -1,2 +1,2 @@
 # Beam-profiler
-Online beam profile calculation from the gray picture
+Online laser beam profile calculation from the gray picture
