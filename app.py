@@ -6,8 +6,15 @@ import streamlit as st
 import cv2
 from PIL import Image
 import numpy as np
+import pandas as pd
 
 
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv().encode("utf-8")
+
+
+print('Go!')
 st.write("# Beam-profiler from picture")
 
 uploaded_files = st.sidebar.file_uploader("Choose files (png, jpg, tiff)", 
@@ -49,7 +56,7 @@ if uploaded_files:
     delta = st.number_input(label = "Select size of final picture in pxl", 
                     min_value=10,
                     max_value=2000,
-                    value=400) / 2
+                    value=400) // 2
 
 
     img_g, *_ = cv2.split(img)
@@ -64,7 +71,6 @@ if uploaded_files:
     #print(center_x,center_y)
 
     # Cropping
-    #print(img_g.shape)
     x1 = int(center_x - delta)
     x2 = int(center_x + delta)
     y1 = int(center_y - delta)
@@ -74,11 +80,27 @@ if uploaded_files:
         img = img[y1:y2,x1:x2]
         st.image(img, width=width)
     else:
-        st.write("Image is too small")
+        st.write('Image is too small')
     
     # Display profile
-    profile_y = img_g[center_y]
-    profile_x = img_g[:,center_x]
+    profile_y = img[:, delta, 1]
+    profile_x = img[delta, :, 1]
+    profile_y = profile_y[..., None]
+    profile_x = profile_x[..., None]
+    data = np.hstack((profile_x, profile_y))
 
-    st.line_chart(profile_x)
-    st.line_chart(profile_y)
+    df = pd.DataFrame(data, columns=['x','y'])
+    st.line_chart(df)
+
+    cv2.imwrite("image\\Beam_profile.png", img)
+
+
+    st.download_button(label='Download data frame', data=convert_df(df), file_name='df.csv',  mime='text/csv')
+    
+    with open("image\\Beam_profile.png", "rb") as file:
+        btn = st.download_button(
+                label="Download image",
+                data=file,
+                file_name="Beam_profile.png",
+                mime="image/png"
+            )
