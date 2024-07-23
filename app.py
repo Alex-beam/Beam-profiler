@@ -12,20 +12,20 @@ import tempfile
 import os
 
 
-def get_all_file_paths(directory): 
+# def get_all_file_paths(directory): 
   
-    # initializing empty file paths list 
-    file_paths = [] 
+#     # initializing empty file paths list 
+#     file_paths = [] 
   
-    # crawling through directory and subdirectories 
-    for root, directories, files in os.walk(directory): 
-        for filename in files: 
-            # join the two strings in order to form the full filepath. 
-            filepath = os.path.join(root, filename)
-            file_paths.append(filepath) 
+#     # crawling through directory and subdirectories 
+#     for root, directories, files in os.walk(directory): 
+#         for filename in files: 
+#             # join the two strings in order to form the full filepath. 
+#             filepath = os.path.join(root, filename)
+#             file_paths.append(filepath) 
   
-    # returning all file paths 
-    return file_paths         
+#     # returning all file paths 
+#     return file_paths         
 
 
 width = 100
@@ -120,7 +120,7 @@ for uploaded_file, img in zip(uploaded_files, imgs):
     df_x = pd.DataFrame(profile_x, columns=['x'])
     df_y = pd.DataFrame(profile_y, columns=['y'])
     df = pd.concat([df_x,df_y], axis=1)
-    
+
     imgs_g.append(img_g)
     imgs_df.append(df)
 
@@ -155,15 +155,23 @@ with tempfile.TemporaryDirectory() as temp_dir_name:
         cv2.imwrite(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + "col" + "." + extension, img_cmap)
         df.to_csv(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".csv", encoding='utf-8')
 
+    path = os.getcwd()
+    os.chdir(temp_dir_name)
 
-    file_paths = get_all_file_paths(temp_dir_name)
+    # file_paths = get_all_file_paths(temp_dir_name)
+    file_paths = []
+
+    for f in os.scandir():
+        if f.is_file():
+            file_paths.append(f.path)
 
     # writing files to a zipfile 
     with ZipFile(temp_dir_name + r"/profiles.zip", "w") as zip: 
         # writing each file one by one 
         for file in file_paths: 
-            zip.write(file) 
-        
+            zip.write(file)
+
+
 
     with open(temp_dir_name + r"/profiles.zip", "rb") as file:
         btn = st.download_button(
@@ -171,5 +179,7 @@ with tempfile.TemporaryDirectory() as temp_dir_name:
                 data=file,
                 file_name="profiles.zip",
                 )
+    
+    os.chdir(path)
         
      
