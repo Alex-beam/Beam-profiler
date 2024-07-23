@@ -17,13 +17,15 @@ width = 100
 
 st.write("# Beam-profiler from picture")
 
+
 uploaded_files = st.sidebar.file_uploader("Choose grey files with laser beam spot", 
                                           type = ['png', 'jpg', 'bmp', 'tif'], 
                                           accept_multiple_files=True)
 for uploaded_file in uploaded_files:
     bytes_data = uploaded_file.read()
-    # st.write("filename:", uploaded_file.name)
-    # st.image(uploaded_file, width= 100)
+
+st.sidebar.write(""" Source code is located [here](https://github.com/Alex-beam/Beam-profiler).   
+                 Contact me by [email](mailto:akorom@mail.ru).""")
 
 st.image(uploaded_files, width=width)
 
