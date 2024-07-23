@@ -117,9 +117,10 @@ for uploaded_file, img in zip(uploaded_files, imgs):
         profile_y = img_g[:, center_y]
         profile_x = img_g[center_x, :]
     
-    df = pd.DataFrame(columns=['x','y'])
-    df.assign(y = profile_y)
-    df.assign(x = profile_x)
+    df_x = pd.DataFrame(profile_x, columns=['x'])
+    df_y = pd.DataFrame(profile_y, columns=['y'])
+    df = pd.concat([df_x,df_y], axis=1)
+    
     imgs_g.append(img_g)
     imgs_df.append(df)
 
