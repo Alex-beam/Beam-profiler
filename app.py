@@ -7,30 +7,14 @@ import cv2
 from PIL import Image
 import numpy as np
 import pandas as pd
-from zipfile import ZipFile, ZIP_LZMA, ZIP_BZIP2, ZIP_DEFLATED
+from zipfile import ZipFile
 import tempfile
 import os
 
 
-# def get_all_file_paths(directory): 
-  
-#     # initializing empty file paths list 
-#     file_paths = [] 
-  
-#     # crawling through directory and subdirectories 
-#     for root, directories, files in os.walk(directory): 
-#         for filename in files: 
-#             # join the two strings in order to form the full filepath. 
-#             filepath = os.path.join(root, filename)
-#             file_paths.append(filepath) 
-  
-#     # returning all file paths 
-#     return file_paths         
-
-
+# width of displayed picture
 width = 100
 
-print('Go!')
 st.write("# Beam-profiler from picture")
 
 uploaded_files = st.sidebar.file_uploader("Choose grey files with laser beam spot", 
@@ -151,14 +135,13 @@ extension = st.selectbox("Choose the extension of new image files", ['png', 'jpg
 with tempfile.TemporaryDirectory() as temp_dir_name:
     for uploaded_file, img_g, img_cmap, df in zip(uploaded_files, imgs_g, imgs_cmap, imgs_df):  
 
-        cv2.imwrite(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + "." + extension, img_g)
-        cv2.imwrite(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + "col" + "." + extension, img_cmap)
-        df.to_csv(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + ".csv", encoding='utf-8')
+        cv2.imwrite(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + "_grey" + "." + extension, img_g)
+        cv2.imwrite(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + "_color" + "." + extension, img_cmap)
+        df.to_csv(temp_dir_name + r"/" + '.'.join(uploaded_file.name.split('.')[:-1]) + "_profiles" + ".csv", encoding='utf-8')
 
     path = os.getcwd()
     os.chdir(temp_dir_name)
 
-    # file_paths = get_all_file_paths(temp_dir_name)
     file_paths = []
 
     for f in os.scandir():
@@ -170,7 +153,6 @@ with tempfile.TemporaryDirectory() as temp_dir_name:
         # writing each file one by one 
         for file in file_paths: 
             zip.write(file)
-
 
 
     with open(temp_dir_name + r"/profiles.zip", "rb") as file:
